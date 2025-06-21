@@ -1,0 +1,4 @@
+openai
+schedule
+python-dotenv
+rich 

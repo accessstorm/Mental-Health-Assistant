@@ -1,3 +1,5 @@
+Live link:
+https://kai-mentalhealth.streamlit.app/
 # Your Friend, Kai 💙
 
 A warm, empathetic, and friendly AI companion. Kai is here to be a supportive friend who listens without judgment. You can talk about your feelings, and Kai will engage in a natural, caring conversation.

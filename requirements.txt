@@ -1,4 +1,9 @@
 openai
 schedule
 python-dotenv
-rich 
+rich
+streamlit
+yagmail
+apscheduler
+pandas
+plotly 

@@ -1,76 +1,201 @@
-# 🧠 Mental Health Check-In Agent
+# 🧠 Mental Health Check-In Agent (Autonomous Version)
 
-Welcome to your digital well-being companion! This project is designed to support mental health by providing a friendly, AI-powered check-in experience—either in your terminal or through a modern web app.
+A proactive, autonomous digital well-being companion that acts like a real caring agent. This application features scheduled email check-ins, inactivity alerts, memory logging, and intelligent responses based on your mood history.
 
-## 🌟 What is this?
-This agent is like a caring friend who checks in with you, listens to how you're feeling, and offers supportive suggestions or detailed insights. It's built for the MindCraft Hackathon, but it's also a great example of how AI can be used for positive, real-world impact.
+## ✨ Features
 
-## 💡 Features
-- **Empathetic AI Check-Ins:** The agent asks how you're feeling and analyzes your response using advanced AI (OpenAI GPT-4o via Azure).
-- **Supportive Suggestions:** Get actionable, positive advice tailored to your mood.
-- **Further Assistance:** Receive a comprehensive, comforting message if you need more support.
-- **Detailed Analysis:** Request a research-style, in-depth analysis of your mental health condition.
-- **Two Ways to Use:**
-  - **Terminal Version:** For those who love the command line.
-  - **Web App Version:** A beautiful, user-friendly interface powered by Streamlit.
-- **Scheduled Check-Ins:** The terminal version can check in with you every morning and evening automatically.
+### 🤖 Autonomous Agent Capabilities
+- **Scheduled Email Check-Ins**: Receives gentle reminders every 2-5 hours (configurable)
+- **Inactivity Alerts**: Gets worried and sends caring emails if you haven't checked in for 12+ hours
+- **Memory Logging**: Remembers all your check-ins and mood patterns
+- **Agent-Like Intelligence**: Uses your mood history to provide personalized responses
+- **Proactive Messaging**: Welcomes you back with warm messages based on your absence
 
-## 🚀 How to Set Up
+### 📊 Enhanced Analytics
+- **Mood Tracking**: Visual charts showing your emotional journey
+- **Check-in History**: Complete log of all your interactions
+- **Statistics Dashboard**: Total check-ins, time since last check-in, and more
+- **Beautiful Visualizations**: Interactive charts using Plotly
 
-### 1. Clone the Repository
-```sh
-git clone <your-repo-url>
-cd <your-repo-folder>
-```
+### 💌 Email Integration
+- **Gmail Support**: Easy setup with Gmail SMTP
+- **Custom SMTP**: Support for other email providers
+- **Warm, Caring Messages**: Human-like email content
+- **Configurable Intervals**: Adjust check-in frequency as needed
 
-### 2. Install Requirements
-Make sure you have Python 3.8+ installed.
-```sh
+### 🎨 Modern UI
+- **Streamlit Interface**: Beautiful, responsive web app
+- **Real-time Updates**: Live statistics and charts
+- **Mobile-Friendly**: Works on all devices
+- **Intuitive Design**: Easy to use and navigate
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+```bash
 pip install -r requirements.txt
 ```
 
-### 3. Add Your OpenAI API Key (Optional)
-By default, the provided Azure OpenAI key is used. For your own deployment, set the following environment variable or edit the script:
-```
-OPENAI_API_KEY=your-key-here
-```
-You can use a `.env` file or set it in your environment.
+### 2. Set Up Email (Optional but Recommended)
+1. Open the Streamlit app
+2. Go to the sidebar settings
+3. Enable email notifications
+4. Enter your Gmail credentials (use an app password for security)
+5. Add your recipient email
+6. Save settings
 
-## 🖥️ Usage
-
-### Terminal Version
-Run the agent in your terminal:
-```sh
-python mental_health_checkin_agent.py
-```
-- The agent will ask how you're feeling.
-- After the initial check-in, you can choose:
-  - Further Assistance (for a comforting, human-like message)
-  - Detailed Analysis (for a research-style, in-depth analysis)
-  - Exit
-- The agent also schedules check-ins at 9:00 AM and 8:00 PM.
-
-### Web App Version
-Run the Streamlit app:
-```sh
+### 3. Run the Streamlit App
+```bash
 streamlit run mental_health_checkin_streamlit.py
 ```
-- Use your browser to interact with the agent.
-- After your check-in, choose further assistance or detailed analysis.
-- Enjoy a modern, friendly interface!
 
-## 🏆 Hackathon Context
-This project was built for the MindCraft Hackathon as a demonstration of how AI can be used to support mental health in a non-intrusive, autonomous, and empathetic way.
+### 4. Run the Autonomous Agent (Background Service)
+```bash
+python autonomous_agent.py
+```
+
+## 📁 File Structure
+
+```
+MCP kamala/
+├── mental_health_checkin_streamlit.py  # Main Streamlit app
+├── autonomous_agent.py                 # Background service
+├── mental_health_checkin_agent.py      # Terminal version
+├── requirements.txt                    # Dependencies
+├── README.md                          # This file
+└── data/                              # Data storage (auto-created)
+    ├── user_history.json              # Check-in history
+    ├── last_checkin.json              # Last check-in timestamp
+    ├── email_config.json              # Email settings
+    └── agent.log                      # Agent activity log
+```
+
+## ⚙️ Configuration
+
+### Email Settings
+- **Sender Email**: Your Gmail address
+- **Sender Password**: Gmail app password (not regular password)
+- **Recipient Email**: Where to send check-in reminders
+- **Check-in Interval**: 2-5 hours (configurable)
+
+### Agent Behavior
+- **Inactivity Threshold**: 12 hours (configurable)
+- **Memory Context**: Uses last 3 check-ins for personalized responses
+- **Logging**: Comprehensive activity logging
+
+## 🔧 Advanced Setup
+
+### Gmail App Password Setup
+1. Go to your Google Account settings
+2. Enable 2-factor authentication
+3. Generate an app password for "Mail"
+4. Use this password in the email configuration
+
+### Custom SMTP Setup
+For non-Gmail providers, modify the email configuration:
+```json
+{
+  "enabled": true,
+  "sender_email": "your-email@domain.com",
+  "sender_password": "your-password",
+  "recipient_email": "recipient@domain.com",
+  "smtp_server": "smtp.your-provider.com",
+  "smtp_port": 587
+}
+```
+
+## 📊 Data Storage
+
+All data is stored locally in JSON format:
+
+### User History Format
+```json
+[
+  {
+    "timestamp": "2025-01-22T14:30:00",
+    "mood": "Sad",
+    "response": "I'm feeling overwhelmed...",
+    "analysis": "Mood: Sad\nSuggestion: Take a short walk..."
+  }
+]
+```
+
+### Last Check-in Format
+```json
+{
+  "timestamp": "2025-01-22T14:30:00"
+}
+```
+
+## 🧠 How It Works
+
+### Autonomous Features
+1. **Background Monitoring**: The autonomous agent runs continuously
+2. **Scheduled Check-ins**: Sends caring emails at regular intervals
+3. **Inactivity Detection**: Monitors for extended periods without check-ins
+4. **Memory Integration**: Uses historical data for personalized responses
+
+### AI Intelligence
+- Analyzes your responses using GPT-4o
+- Extracts mood patterns from your text
+- Provides context-aware suggestions
+- Learns from your interaction history
+
+### Proactive Behavior
+- Welcomes you back after absences
+- Shows concern for extended inactivity
+- Provides warm, human-like interactions
+- Adapts responses based on your mood patterns
+
+## 🛠️ Troubleshooting
+
+### Email Issues
+- **Gmail**: Use app passwords, not regular passwords
+- **Authentication**: Ensure 2FA is enabled for Gmail
+- **SMTP**: Check port and server settings for other providers
+
+### Data Issues
+- **File Permissions**: Ensure write access to the data directory
+- **JSON Corruption**: Delete corrupted files to reset data
+- **Path Issues**: Check that the data directory exists
+
+### Agent Issues
+- **Scheduler**: Restart the autonomous agent if scheduling fails
+- **Logs**: Check `data/agent.log` for detailed error information
+- **Configuration**: Verify email settings in the Streamlit app
+
+## 🔒 Privacy & Security
+
+- **Local Storage**: All data stored locally on your machine
+- **No Cloud**: No data sent to external servers (except OpenAI API)
+- **Email Security**: Use app passwords for Gmail
+- **Data Control**: You can delete data files at any time
+
+## 🎯 Use Cases
+
+- **Daily Mental Health Monitoring**: Regular check-ins for emotional well-being
+- **Mood Pattern Analysis**: Track emotional trends over time
+- **Proactive Support**: Get gentle reminders when needed
+- **Personal Growth**: Reflect on feelings and receive guidance
+- **Stress Management**: Identify and address stress patterns
 
 ## 🤝 Contributing
-Pull requests and suggestions are welcome! If you have ideas for new features or improvements, feel free to open an issue or PR.
 
-## ⚠️ Disclaimer
-This agent is **not a substitute for professional mental health care**. If you are in crisis or need urgent help, please reach out to a mental health professional or helpline in your area.
+Feel free to enhance the agent with additional features:
+- New mood analysis algorithms
+- Additional visualization types
+- Integration with other health apps
+- Enhanced email templates
+- Mobile app version
 
-## 📄 License
-MIT License
+## 📞 Support
+
+If you encounter issues:
+1. Check the logs in `data/agent.log`
+2. Verify your email configuration
+3. Ensure all dependencies are installed
+4. Check file permissions in the data directory
 
 ---
 
-*Built with ❤️ for the MindCraft Hackathon* 
+**💙 Remember: Your mental health matters, and this agent is here to support you on your well-being journey.** 

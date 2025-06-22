@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "sender_email": "jayavratasengupta9881@gmail.com",
+  "sender_password": "jrcj xwso qwzl kcmy",
+  "recipient_email": "jayavratasengupta9881@gmail.com",
+  "smtp_server": "smtp.gmail.com",
+  "smtp_port": 587
+}

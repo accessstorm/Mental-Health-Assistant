@@ -187,51 +187,13 @@ Your Mental Health Companion
 # MONITORING FUNCTIONS
 # ============================================================================
 
-def check_inactivity():
-    """Check if user has been inactive and send alert if needed."""
-    logger.info("Checking for user inactivity...")
-    
-    last_checkin = get_last_checkin()
-    if last_checkin:
-        last_checkin_dt = datetime.datetime.fromisoformat(last_checkin)
-        hours_since_checkin = (datetime.datetime.now() - last_checkin_dt).total_seconds() / 3600
-        
-        logger.info(f"Hours since last check-in: {hours_since_checkin:.1f}")
-        
-        if hours_since_checkin > INACTIVITY_THRESHOLD_HOURS:
-            logger.warning(f"User inactive for {hours_since_checkin:.1f} hours. Sending alert.")
-            if send_inactivity_alert():
-                # Update last checkin to prevent spam
-                save_last_checkin()
-                logger.info("Inactivity alert sent successfully.")
-            else:
-                logger.error("Failed to send inactivity alert.")
-        else:
-            logger.info("User activity is within normal range.")
-    else:
-        logger.info("No previous check-in found. User is new.")
-
 def log_agent_status():
-    """Log current agent status and statistics."""
-    history = load_json_file(USER_HISTORY_FILE, [])
-    last_checkin = get_last_checkin()
-    
-    total_checkins = len(history)
-    logger.info(f"Agent Status - Total check-ins: {total_checkins}")
-    
-    if last_checkin:
-        last_checkin_dt = datetime.datetime.fromisoformat(last_checkin)
-        hours_ago = (datetime.datetime.now() - last_checkin_dt).total_seconds() / 3600
-        logger.info(f"Hours since last check-in: {hours_ago:.1f}")
-    
-    # Log mood distribution if available
-    if history:
-        moods = [entry.get("mood", "Unknown") for entry in history]
-        mood_counts = {}
-        for mood in moods:
-            mood_counts[mood] = mood_counts.get(mood, 0) + 1
-        
-        logger.info(f"Mood distribution: {mood_counts}")
+    """Log current agent status."""
+    email_config = get_email_config()
+    if email_config.get("enabled"):
+        logger.info(f"Scheduled email check-ins are ENABLED for {email_config.get('recipient_email')}")
+    else:
+        logger.info("Scheduled email check-ins are DISABLED.")
 
 # ============================================================================
 # SCHEDULER SETUP
@@ -247,15 +209,6 @@ def setup_scheduler():
         IntervalTrigger(hours=CHECK_IN_INTERVAL_HOURS),
         id='checkin_email',
         name='Scheduled Check-in Email',
-        replace_existing=True
-    )
-    
-    # Inactivity monitoring (check every hour)
-    scheduler.add_job(
-        check_inactivity,
-        IntervalTrigger(hours=1),
-        id='inactivity_check',
-        name='Inactivity Monitoring',
         replace_existing=True
     )
     

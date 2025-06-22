@@ -231,113 +231,28 @@ def check_inactivity():
 # AI ANALYSIS FUNCTIONS
 # ============================================================================
 
-def get_mood_from_response(analysis_text):
-    """Extract mood from AI analysis response."""
-    try:
-        # Look for "Mood:" in the response
-        if "Mood:" in analysis_text:
-            mood_line = analysis_text.split("Mood:")[1].split("\n")[0].strip()
-            return mood_line
-        else:
-            # Fallback: try to extract mood from common patterns
-            mood_keywords = ["Positive", "Neutral", "Stressed", "Sad", "Anxious", "Happy", "Depressed", "Excited", "Tired", "Energetic"]
-            for keyword in mood_keywords:
-                if keyword.lower() in analysis_text.lower():
-                    return keyword
-        return "Unknown"
-    except:
-        return "Unknown"
-
-def analyze_mood_with_history(user_input):
-    """Analyze mood with context from previous check-ins."""
-    history = get_user_history()
-    recent_moods = []
+def get_conversational_response(messages):
+    """Get a conversational response from the AI."""
     
-    # Get last 3 moods for context
-    if history:
-        recent_entries = history[-3:]
-        recent_moods = [entry.get("mood", "Unknown") for entry in recent_entries]
-    
-    # Create enhanced prompt with mood history
-    mood_context = ""
-    if recent_moods:
-        mood_context = f"\n\nUser's recent moods were: {', '.join(recent_moods)}. Please consider this context when analyzing their current state and provide personalized suggestions."
-    
-    prompt = f"""
-You are a friendly mental health companion. Analyze the following user response for signs of stress, sadness, or low mood. Then, suggest a simple, positive action or resource. Be supportive and non-judgmental.
-
-User response: "{user_input}"{mood_context}
-
-Reply with:
-Mood: (e.g., Positive, Neutral, Stressed, Sad, Anxious, etc.)
-Suggestion: (one actionable, positive suggestion or resource)
+    # The system prompt defines the AI's personality
+    system_prompt = {
+        "role": "system",
+        "content": """You are Kai, a warm, empathetic, and friendly AI companion. 
+Your primary goal is to be a supportive friend who listens without judgment. 
+When a user shares their feelings, do not jump to analysis or suggestions. 
+Instead, engage with them conversationally. Ask gentle, open-ended questions to understand them better, 
+like 'What's been on your mind?' or 'I'm here to listen if you want to talk more about that.' 
+Maintain a continuous, caring conversation. Keep your responses concise and natural, like a real friend texting.
 """
+    }
+    
+    # We need to ensure the system prompt is always the first message
+    api_messages = [system_prompt] + messages
     
     response = client.chat.completions.create(
         model="mindcraft-gpt4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=300
-    )
-    return response.choices[0].message.content
-
-def further_assistance(user_input):
-    """Provide further assistance with mood history context."""
-    history = get_user_history()
-    recent_moods = []
-    
-    if history:
-        recent_entries = history[-3:]
-        recent_moods = [entry.get("mood", "Unknown") for entry in recent_entries]
-    
-    mood_context = ""
-    if recent_moods:
-        mood_context = f"\n\nUser's recent moods were: {', '.join(recent_moods)}. Please consider this pattern when offering assistance."
-    
-    prompt = f"""
-You are a compassionate mental health companion. The user has asked for further assistance after sharing their feelings. Respond with a comprehensive, comforting, and human-like message, offering emotional support and practical advice. Be empathetic and reassuring.
-
-User's initial message: "{user_input}"{mood_context}
-"""
-    
-    response = client.chat.completions.create(
-        model="mindcraft-gpt4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
+        messages=api_messages,
         max_tokens=350
-    )
-    return response.choices[0].message.content
-
-def detailed_analysis(user_input):
-    """Provide detailed analysis with mood history context."""
-    history = get_user_history()
-    recent_moods = []
-    
-    if history:
-        recent_entries = history[-3:]
-        recent_moods = [entry.get("mood", "Unknown") for entry in recent_entries]
-    
-    mood_context = ""
-    if recent_moods:
-        mood_context = f"\n\nUser's recent moods were: {', '.join(recent_moods)}. Please consider this pattern in your analysis."
-    
-    prompt = f"""
-You are a mental health expert. Provide a detailed, research-style analysis of the user's mental health condition based on their message. Include possible causes, effects, and evidence-based strategies for improvement. Use a professional but accessible tone.
-
-User's message: "{user_input}"{mood_context}
-"""
-    
-    response = client.chat.completions.create(
-        model="mindcraft-gpt4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=500
     )
     return response.choices[0].message.content
 
@@ -347,245 +262,123 @@ User's message: "{user_input}"{mood_context}
 
 def main():
     st.set_page_config(
-        page_title="Mental Health Check-In Agent", 
-        page_icon="🧠",
-        layout="wide"
+        page_title="Your Friend, Kai", 
+        page_icon="💙",
+        layout="centered"
     )
     
-    # Initialize session state
-    if 'checkin_done' not in st.session_state:
-        st.session_state['checkin_done'] = False
-    if 'user_input' not in st.session_state:
-        st.session_state['user_input'] = ''
-    if 'analysis' not in st.session_state:
-        st.session_state['analysis'] = ''
-    if 'followup' not in st.session_state:
-        st.session_state['followup'] = ''
+    # Initialize session state for conversation history
+    if 'messages' not in st.session_state:
+        # Start with a welcoming message from Kai
+        st.session_state.messages = [{
+            "role": "assistant", 
+            "content": "Hey! I'm Kai. I'm here to listen. How are you feeling today?"
+        }]
     
     # Header
-    st.title("🧠 Mental Health Check-In Agent")
-    st.markdown("**Your proactive digital well-being companion** 💙")
+    st.title("Your Friend, Kai 💙")
+    st.markdown("**A friendly ear, always here to listen.**")
     
-    # Sidebar for settings and stats
+    # Sidebar for settings
     with st.sidebar:
         st.header("⚙️ Agent Settings")
         
         # Email configuration
-        st.subheader("📧 Email Notifications")
+        st.subheader("📧 Scheduled Check-Ins")
+        st.write("You can still receive scheduled emails to remind you to chat.")
         email_config = get_email_config()
         
-        email_enabled = st.checkbox("Enable Email Notifications", email_config.get("enabled", False))
+        email_enabled = st.checkbox("Enable Email Check-Ins", email_config.get("enabled", False))
         if email_enabled:
-            sender_email = st.text_input("Sender Email", email_config.get("sender_email", ""))
-            sender_password = st.text_input("Sender Password", email_config.get("sender_password", ""), type="password")
-            recipient_email = st.text_input("Recipient Email", email_config.get("recipient_email", ""))
+            sender_email = st.text_input("Sender Email (e.g., Gmail)", email_config.get("sender_email", ""))
+            sender_password = st.text_input("Sender App Password", email_config.get("sender_password", ""), type="password")
+            recipient_email = st.text_input("Your Email (Recipient)", email_config.get("recipient_email", ""))
             
-            if st.button("Save Email Settings"):
-                new_config = {
-                    "enabled": email_enabled,
-                    "sender_email": sender_email,
-                    "sender_password": sender_password,
-                    "recipient_email": recipient_email,
-                    "smtp_server": "smtp.gmail.com",
-                    "smtp_port": 587
-                }
-                if save_email_config(new_config):
-                    setup_scheduled_emails()
-                    st.success("Email settings saved!")
-        
-        # Check-in interval
-        st.subheader("⏰ Check-In Schedule")
-        if 'interval' not in st.session_state:
-            st.session_state['interval'] = CHECK_IN_INTERVAL_HOURS
-        interval = st.slider("Email Check-In Interval (hours)", 2, 5, st.session_state['interval'])
-        if interval != st.session_state['interval']:
-            st.session_state['interval'] = interval
-            setup_scheduled_emails()
-        
-        # Test email
-        if email_enabled:
-            if st.button("Send Test Email"):
-                if send_checkin_email():
-                    st.success("Test email sent!")
-                else:
-                    st.error("Failed to send test email")
-        
+            # Check-in interval slider
+            st.session_state.interval = st.slider(
+                "Email Check-In Interval (hours)", 
+                2, 5, 
+                CHECK_IN_INTERVAL_HOURS
+            )
+            
+            # Update the global variable if it changes
+            if st.session_state.interval != CHECK_IN_INTERVAL_HOURS:
+                # This is one of the few cases where a global is managed this way in Streamlit
+                # to interact with a background scheduler.
+                globals()['CHECK_IN_INTERVAL_HOURS'] = st.session_state.interval
+                setup_scheduled_emails()
+
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Save Email Settings"):
+                    new_config = {
+                        "enabled": email_enabled,
+                        "sender_email": sender_email,
+                        "sender_password": sender_password,
+                        "recipient_email": recipient_email,
+                        "smtp_server": "smtp.gmail.com",
+                        "smtp_port": 587
+                    }
+                    if save_email_config(new_config):
+                        setup_scheduled_emails() # Reschedule with new interval if needed
+                        st.success("Email settings saved!")
+            
+            with col2:
+                if st.button("Send Test Email"):
+                    with st.spinner("Sending test email..."):
+                        if send_checkin_email():
+                            st.success("Test email sent!")
+                        else:
+                            st.error("Failed to send test email.")
+
         st.markdown("---")
+        st.info("Your conversation is private and is not stored. It will be cleared when you close this tab.")
         
-        # Stats
-        st.subheader("📊 Your Stats")
-        history = get_user_history()
-        if history:
-            total_checkins = len(history)
-            st.metric("Total Check-ins", total_checkins)
-            
-            last_checkin = get_last_checkin()
-            if last_checkin:
-                last_checkin_dt = datetime.datetime.fromisoformat(last_checkin)
-                hours_ago = (datetime.datetime.now() - last_checkin_dt).total_seconds() / 3600
-                st.metric("Hours Since Last Check-in", f"{hours_ago:.1f}")
+        if st.button("🔄 Start New Conversation"):
+            st.session_state.messages = [{
+                "role": "assistant", 
+                "content": "Of course. Let's start fresh. What's on your mind?"
+            }]
+            st.rerun()
+
+    # Display chat messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Chat input field
+    if prompt := st.chat_input("What's on your mind?"):
+        # Add user message to session state
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        
+        # Display user message
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        
+        # Get AI response
+        with st.spinner("Kai is thinking..."):
+            try:
+                # Pass the conversation history to the AI
+                full_response = get_conversational_response(st.session_state.messages)
                 
-                if hours_ago > 24:
-                    st.warning("⚠️ It's been over 24 hours since your last check-in. I'm here when you're ready!")
-        else:
-            st.info("No check-ins yet. Welcome! 👋")
-    
-    # Main content area
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        # Check-in form
-        if not st.session_state['checkin_done']:
-            st.subheader("How are you feeling today?")
-            
-            # Proactive message based on inactivity
-            last_checkin = get_last_checkin()
-            if last_checkin:
-                last_checkin_dt = datetime.datetime.fromisoformat(last_checkin)
-                hours_ago = (datetime.datetime.now() - last_checkin_dt).total_seconds() / 3600
-                if hours_ago > 24:
-                    st.info("💙 Welcome back! I've missed you. How have you been feeling?")
-                elif hours_ago > 12:
-                    st.info("💙 Good to see you again! How are you doing?")
-            
-            with st.form("checkin_form"):
-                user_input = st.text_area(
-                    "Share your thoughts and feelings...", 
-                    "", 
-                    height=120,
-                    placeholder="I'm feeling... (share as much or as little as you'd like)"
-                )
-                submitted = st.form_submit_button("Check In 💙")
-            
-            if submitted and user_input.strip():
-                with st.spinner("Analyzing your response..."):
-                    try:
-                        analysis = analyze_mood_with_history(user_input)
-                        mood = get_mood_from_response(analysis)
-                        
-                        # Save to history
-                        history = get_user_history()
-                        new_entry = {
-                            "timestamp": datetime.datetime.now().isoformat(),
-                            "mood": mood,
-                            "response": user_input,
-                            "analysis": analysis
-                        }
-                        history.append(new_entry)
-                        save_user_history(history)
-                        
-                        # Update last check-in
-                        save_last_checkin()
-                        
-                        st.session_state['analysis'] = analysis
-                        st.session_state['user_input'] = user_input
-                        st.session_state['checkin_done'] = True
-                        st.session_state['mood'] = mood
-                        
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Error analyzing response: {e}")
-        
-        # Show result and follow-up options
-        if st.session_state['checkin_done']:
-            st.success("✅ Check-In Complete!")
-            st.markdown(
-                f"<div style='background-color:#f0f2f6;padding:1.5em;border-radius:10px;font-size:1.1em;white-space:pre-wrap;word-break:break-word;color:#111;border-left:4px solid #4CAF50;'>" +
-                st.session_state['analysis'] + "</div>",
-                unsafe_allow_html=True
-            )
-            
-            st.info("💙 Thank you for checking in! Your feelings matter, and I'm here to support you.")
-            
-            # Follow-up options
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("🤗 Further Assistance", use_container_width=True):
-                    with st.spinner("Offering further assistance..."):
-                        st.session_state['followup'] = further_assistance(st.session_state['user_input'])
-            with col_b:
-                if st.button("📊 Detailed Analysis", use_container_width=True):
-                    with st.spinner("Generating detailed analysis..."):
-                        st.session_state['followup'] = detailed_analysis(st.session_state['user_input'])
-            
-            # Show follow-up response
-            if st.session_state['followup']:
-                st.markdown(
-                    f"<div style='background-color:#e6f7ff;padding:1.5em;border-radius:10px;font-size:1.05em;white-space:pre-wrap;word-break:break-word;color:#111;border-left:4px solid #2196F3;'>" +
-                    st.session_state['followup'] + "</div>",
-                    unsafe_allow_html=True
-                )
-            
-            # Option to restart
-            st.markdown("---")
-            if st.button("🔄 Start New Check-In"):
-                st.session_state['checkin_done'] = False
-                st.session_state['user_input'] = ''
-                st.session_state['analysis'] = ''
-                st.session_state['followup'] = ''
-                st.rerun()
-    
-    with col2:
-        # Mood history chart
-        st.subheader("📈 Your Mood Journey")
-        history = get_user_history()
-        
-        if history:
-            # Create mood chart
-            df = pd.DataFrame(history)
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
-            df = df.sort_values('timestamp')
-            
-            # Count mood frequencies
-            mood_counts = df['mood'].value_counts()
-            
-            # Create pie chart
-            fig = px.pie(
-                values=mood_counts.values,
-                names=mood_counts.index,
-                title="Mood Distribution",
-                color_discrete_sequence=px.colors.qualitative.Set3
-            )
-            fig.update_layout(height=300, showlegend=True)
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # Recent check-ins
-            st.subheader("📝 Recent Check-ins")
-            recent_entries = history[-5:]  # Last 5 entries
-            for entry in reversed(recent_entries):
-                timestamp = datetime.datetime.fromisoformat(entry['timestamp'])
-                mood = entry.get('mood', 'Unknown')
-                response = entry.get('response', '')[:50] + "..." if len(entry.get('response', '')) > 50 else entry.get('response', '')
+                # Display AI response
+                with st.chat_message("assistant"):
+                    st.markdown(full_response)
                 
-                st.markdown(f"""
-                **{timestamp.strftime('%b %d, %H:%M')}** - {mood}
-                *"{response}"*
-                ---
-                """)
-        else:
-            st.info("No mood data yet. Start your first check-in! 🌟")
-    
-    # Footer
-    st.markdown("---")
-    st.markdown(
-        """
-        <div style='text-align: center; color: #666; font-size: 0.9em;'>
-        💙 Your Mental Health Companion | Always here to support you
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+                # Add AI response to session state
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
+                
+            except Exception as e:
+                st.error(f"Sorry, I ran into a problem: {e}")
 
 # ============================================================================
 # INITIALIZATION
 # ============================================================================
 
 if __name__ == "__main__":
-    # Set up scheduled tasks
+    # The background scheduler for emails can still run
+    # It no longer needs to check for inactivity, just send reminders
     setup_scheduled_emails()
-    
-    # Check for inactivity (run once on startup)
-    check_inactivity()
     
     # Run the main app
     main() 
